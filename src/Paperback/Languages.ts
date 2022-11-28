@@ -51,6 +51,10 @@ export const parseLangCode = (code: string) => {
         return LanguageCode.PHILIPPINE;
     }
 
+    if (code === "zh-hk") {
+        return LanguageCode.CHINEESE_HONGKONG;
+    }
+
     // Other are two letters codes
     return reverseLangCode[code.substr(0, 2)] ?? LanguageCode.UNKNOWN;
 };
