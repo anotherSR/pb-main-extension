@@ -2593,6 +2593,9 @@ const parseLangCode = (code) => {
     if (code.substr(0, 3) === "fil") {
         return paperback_extensions_common_1.LanguageCode.PHILIPPINE;
     }
+    if (code === "zh-hk") {
+        return paperback_extensions_common_1.LanguageCode.CHINEESE_HONGKONG;
+    }
     // Other are two letters codes
     return reverseLangCode[code.substr(0, 2)] ?? paperback_extensions_common_1.LanguageCode.UNKNOWN;
 };
@@ -2919,6 +2922,26 @@ class Paperback extends paperback_extensions_common_1.Source {
         }
         // The source define two homepage sections: new and latest
         const sections = [];
+        sections.push(createHomeSection({
+            id: 'recent',
+            title: 'Recently Released',
+            view_more: true,
+            type: paperback_extensions_common_1.HomeSectionType.singleRowLarge,
+        }));
+        // Get list of series currently watching
+        const request = createRequestObject({
+            url: `${komgaAPI}/series`,
+            method: "GET",
+            param: '?search=genre%3A%F0%9F%91%80'
+        });
+        const response = await this.requestManager.schedule(request, 1);
+        const result = typeof response.data === "string"
+            ? JSON.parse(response.data)
+            : response.data;
+        var watchingSeries = [];
+        for (const serie of result.content) {
+            watchingSeries.push(serie.id);
+        }
         if (showOnDeck) {
             sections.push(createHomeSection({
                 id: 'ondeck',
@@ -2953,13 +2976,19 @@ class Paperback extends paperback_extensions_common_1.Source {
                 case 'ondeck':
                     apiPath = `${komgaAPI}/books/${section.id}`;
                     thumbPath = `${komgaAPI}/books`;
-                    params = '?page=0&size=20&deleted=false';
+                    params = '?page=0&deleted=false';
                     idProp = 'seriesId';
                     break;
                 case 'continue':
                     apiPath = `${komgaAPI}/books`;
                     thumbPath = `${komgaAPI}/books`;
                     params = '?sort=readProgress.readDate,desc&read_status=IN_PROGRESS&page=0&size=20&deleted=false';
+                    idProp = 'seriesId';
+                    break;
+                case 'recent':
+                    apiPath = `${komgaAPI}/books`;
+                    thumbPath = `${komgaAPI}/books`;
+                    params = '?sort=metadata.releaseDate,desc&read_status=UNREAD&size=100&deleted=false';
                     idProp = 'seriesId';
                     break;
                 default:
@@ -2976,13 +3005,40 @@ class Paperback extends paperback_extensions_common_1.Source {
             });
             // Get the section data
             promises.push(this.requestManager.schedule(request, 1).then((data) => {
-                const result = typeof data.data === "string" ? JSON.parse(data.data) : data.data;
+                var result = typeof data.data === "string" ? JSON.parse(data.data) : data.data;
                 const tiles = [];
+                // Prioritize watching series
+                if (section.id == 'recent') {
+                    var prioritized = [];
+                    for (const serie of result.content) {
+                        if (watchingSeries.includes(serie.seriesId)) {
+                            prioritized.push(serie);
+                        }
+                    }
+                    for (var i = 0; i++; i < prioritized.length) {
+                        result.content = result.content.splice(result.content.indexOf(prioritized[i]), 1);
+                    }
+                    result.content = prioritized.concat(result.content);
+                }
                 for (const serie of result.content) {
+                    var subtitle = undefined;
+                    var title = createIconText({ text: serie.metadata.title });
+                    var image = `${thumbPath}/${serie.id}/thumbnail`;
+                    if (section.id == 'recent' || section.id == 'ondeck') {
+                        title = createIconText({ text: serie.seriesTitle });
+                        subtitle = createIconText({
+                            text: `${serie.metadata.number} ${serie.metadata.title}`
+                        });
+                        image = `${komgaAPI}/series/${serie.seriesId}/thumbnail`;
+                    }
+                    if (section.id == 'recent' && watchingSeries.includes(serie.seriesId)) {
+                        title = createIconText({ text: `👀 ${serie.seriesTitle} ` });
+                    }
                     tiles.push(createMangaTile({
                         id: serie[idProp],
-                        title: createIconText({ text: serie.metadata.title }),
-                        image: `${thumbPath}/${serie.id}/thumbnail`,
+                        title: title,
+                        subtitleText: subtitle,
+                        image: image,
                     }));
                 }
                 section.items = tiles;
