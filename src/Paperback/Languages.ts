@@ -5,7 +5,7 @@ const reverseLangCode: { [x: string]: LanguageCode } = {
     bn: LanguageCode.BENGALI,
     bg: LanguageCode.BULGARIAN,
     // 'br': LanguageCode.BRAZILIAN,         // use pt: Portuguese
-    zs: LanguageCode.CHINEESE, // CHINESE
+    'zh': LanguageCode.CHINEESE, // CHINESE
     cs: LanguageCode.CZECH,
     de: LanguageCode.GERMAN,
     da: LanguageCode.DANISH,
@@ -14,7 +14,7 @@ const reverseLangCode: { [x: string]: LanguageCode } = {
     fi: LanguageCode.FINNISH,
     fr: LanguageCode.FRENCH,
     el: LanguageCode.GREEK,
-    // 'hk': LanguageCode.CHINEESE_HONGKONG,
+    'zh-hk': LanguageCode.CHINEESE_HONGKONG,
     hu: LanguageCode.HUNGARIAN,
     id: LanguageCode.INDONESIAN,
     he: LanguageCode.ISRELI, // HEBREW
