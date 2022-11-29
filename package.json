@@ -1,7 +1,7 @@
 {
-  "name": "extensions-main",
+  "name": "komga",
   "version": "1.0.0",
-  "description": "The default source for Paperback, MangaDex",
+  "description": "Personal adaptation from Paperback's official Komga source (from Faizan Durrani)",
   "main": "index.js",
   "scripts": {
     "start": "tsc && node dist/api.js",
@@ -11,7 +11,7 @@
     "bundle": "paperback bundle",
     "serve": "paperback serve"
   },
-  "author": "Faizan Durrani",
+  "author": "Shaderein",
   "license": "ISC",
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.11.0",
