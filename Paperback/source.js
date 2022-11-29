@@ -2623,13 +2623,13 @@ const Common_1 = require("./Common");
 //  - search method which is called even if the user search in an other source
 exports.PaperbackInfo = {
     version: "1.2.8",
-    name: "Paperback",
+    name: "Komga",
     icon: "icon.png",
-    author: "Lemon | Faizan Durrani",
+    author: "Shaderein | Lemon | Faizan Durrani",
     authorWebsite: "https://github.com/FramboisePi",
     description: "Komga client extension for Paperback",
     contentRating: paperback_extensions_common_1.ContentRating.EVERYONE,
-    websiteBaseURL: "https://komga.org",
+    websiteBaseURL: "https://komga.shaderein.com",
     sourceTags: [
         {
             text: "Self hosted",
@@ -2849,16 +2849,29 @@ class Paperback extends paperback_extensions_common_1.Source {
             : serieResponse.data;
         const languageCode = (0, Languages_1.parseLangCode)(serieResult.metadata.language);
         for (const book of booksResult.content) {
-            chapters.push(createChapter({
-                id: book.id,
-                mangaId: mangaId,
-                chapNum: parseFloat(book.metadata.number),
-                langCode: languageCode,
-                name: `${book.metadata.title} (${book.size})`,
-                time: new Date(book.fileLastModified),
-                // @ts-ignore
-                sortingIndex: book.metadata.numberSort
-            }));
+            if (languageCode == paperback_extensions_common_1.LanguageCode.CHINEESE) {
+                chapters.push(createChapter({
+                    id: book.id,
+                    mangaId: mangaId,
+                    chapNum: parseFloat(book.metadata.number),
+                    name: `${book.metadata.title}`,
+                    time: new Date(book.metadata.releaseDate),
+                    // @ts-ignore
+                    sortingIndex: book.metadata.numberSort
+                }));
+            }
+            else {
+                chapters.push(createChapter({
+                    id: book.id,
+                    mangaId: mangaId,
+                    chapNum: parseFloat(book.metadata.number),
+                    langCode: languageCode,
+                    name: `${book.metadata.title}`,
+                    time: new Date(book.metadata.releaseDate),
+                    // @ts-ignore
+                    sortingIndex: book.metadata.numberSort
+                }));
+            }
         }
         return chapters;
     }
@@ -2927,6 +2940,7 @@ class Paperback extends paperback_extensions_common_1.Source {
             title: 'Recently Released',
             view_more: true,
             type: paperback_extensions_common_1.HomeSectionType.singleRowLarge,
+            // type: HomeSectionType.featured
         }));
         // Get list of series currently watching
         const request = createRequestObject({
@@ -2942,6 +2956,30 @@ class Paperback extends paperback_extensions_common_1.Source {
         for (const serie of result.content) {
             watchingSeries.push(serie.id);
         }
+        // Identify manga from webtoon to use vertical cover
+        const request2 = createRequestObject({
+            url: `${komgaAPI}/series`,
+            method: "GET",
+            param: '?search=genre%3Acovered'
+        });
+        const response2 = await this.requestManager.schedule(request2, 1);
+        const result2 = typeof response2.data === "string"
+            ? JSON.parse(response2.data)
+            : response2.data;
+        var mangaSeries = [];
+        for (const serie of result2.content) {
+            mangaSeries.push(serie.id);
+        }
+        // Peek Continue Reading
+        const request3 = createRequestObject({
+            url: `${komgaAPI}/books`,
+            method: "GET",
+            param: '?sort=readProgress.readDate,desc&read_status=IN_PROGRESS&page=0&size=20&deleted=false'
+        });
+        const response3 = await this.requestManager.schedule(request3, 1);
+        const result3 = typeof response3.data === "string"
+            ? JSON.parse(response3.data)
+            : response3.data;
         if (showOnDeck) {
             sections.push(createHomeSection({
                 id: 'ondeck',
@@ -2949,7 +2987,7 @@ class Paperback extends paperback_extensions_common_1.Source {
                 view_more: false,
             }));
         }
-        if (showContinueReading) {
+        if (showContinueReading && !result3.empty) {
             sections.push(createHomeSection({
                 id: 'continue',
                 title: 'Continue Reading',
@@ -3010,26 +3048,29 @@ class Paperback extends paperback_extensions_common_1.Source {
                 // Prioritize watching series
                 if (section.id == 'recent') {
                     var prioritized = [];
-                    for (const serie of result.content) {
-                        if (watchingSeries.includes(serie.seriesId)) {
-                            prioritized.push(serie);
+                    var normal = [];
+                    for (const book of result.content) {
+                        if (watchingSeries.includes(book.seriesId)) {
+                            prioritized.push(book);
+                        }
+                        else {
+                            normal.push(book);
                         }
                     }
-                    for (var i = 0; i++; i < prioritized.length) {
-                        result.content = result.content.splice(result.content.indexOf(prioritized[i]), 1);
-                    }
-                    result.content = prioritized.concat(result.content);
+                    result.content = prioritized.concat(normal);
                 }
                 for (const serie of result.content) {
                     var subtitle = undefined;
                     var title = createIconText({ text: serie.metadata.title });
                     var image = `${thumbPath}/${serie.id}/thumbnail`;
-                    if (section.id == 'recent' || section.id == 'ondeck') {
+                    if (['recent', 'ondeck', 'continue'].includes(section.id)) {
                         title = createIconText({ text: serie.seriesTitle });
                         subtitle = createIconText({
                             text: `${serie.metadata.number} ${serie.metadata.title}`
                         });
-                        image = `${komgaAPI}/series/${serie.seriesId}/thumbnail`;
+                        if (!mangaSeries.includes(serie.seriesId)) {
+                            image = `${komgaAPI}/series/${serie.seriesId}/thumbnail`;
+                        }
                     }
                     if (section.id == 'recent' && watchingSeries.includes(serie.seriesId)) {
                         title = createIconText({ text: `👀 ${serie.seriesTitle} ` });
