@@ -3026,7 +3026,7 @@ class Paperback extends paperback_extensions_common_1.Source {
                 case 'recent':
                     apiPath = `${komgaAPI}/books`;
                     thumbPath = `${komgaAPI}/books`;
-                    params = '?sort=metadata.releaseDate,desc&read_status=UNREAD&size=100&deleted=false';
+                    params = '?sort=metadata.releaseDate,desc&sort=metadata.lastModified,desc&read_status=UNREAD&size=100&deleted=false';
                     idProp = 'seriesId';
                     break;
                 default:
