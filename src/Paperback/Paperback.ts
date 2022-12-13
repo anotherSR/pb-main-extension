@@ -355,7 +355,7 @@ export class Paperback extends Source {
                     createChapter({
                         id: book.id,
                         mangaId: mangaId,
-                        chapNum: parseFloat(book.metadata.number),
+                        chapNum: parseFloat(book.metadata.numberSort),
                         name: `${book.metadata.title}`,
                         time: new Date(book.metadata.releaseDate),
                         // @ts-ignore
