@@ -316,6 +316,11 @@ export class Paperback extends Source {
         });
     }
 
+    override getMangaShareUrl(mangaId: string): string {
+        const server = "https://komga.shaderein.com";
+        return `${server}/series/${mangaId}`
+    }
+
     async getChapters(mangaId: string): Promise<Chapter[]> {
         /*
                 In Komga a chapter is a `book`
@@ -358,6 +363,7 @@ export class Paperback extends Source {
                         chapNum: parseFloat(book.metadata.numberSort),
                         name: `${book.metadata.title}`,
                         time: new Date(book.metadata.releaseDate),
+                        group: `${book.size}`,
                         // @ts-ignore
                         sortingIndex: book.metadata.numberSort
                     })
@@ -369,9 +375,10 @@ export class Paperback extends Source {
                         id: book.id,
                         mangaId: mangaId,
                         chapNum: parseFloat(book.metadata.number),
-                        langCode: languageCode,
                         name: `${book.metadata.title}`,
                         time: new Date(book.metadata.releaseDate),
+                        group: `${book.size}`,
+                        langCode: languageCode,
                         // @ts-ignore
                         sortingIndex: book.metadata.numberSort
                     })
