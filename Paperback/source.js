@@ -2823,6 +2823,10 @@ class Paperback extends paperback_extensions_common_1.Source {
             lastUpdate: metadata.lastModified,
         });
     }
+    getMangaShareUrl(mangaId) {
+        const server = "https://komga.shaderein.com";
+        return `${server}/series/${mangaId}`;
+    }
     async getChapters(mangaId) {
         /*
                 In Komga a chapter is a `book`
@@ -2856,6 +2860,7 @@ class Paperback extends paperback_extensions_common_1.Source {
                     chapNum: parseFloat(book.metadata.numberSort),
                     name: `${book.metadata.title}`,
                     time: new Date(book.metadata.releaseDate),
+                    group: `${book.size}`,
                     // @ts-ignore
                     sortingIndex: book.metadata.numberSort
                 }));
@@ -2865,9 +2870,10 @@ class Paperback extends paperback_extensions_common_1.Source {
                     id: book.id,
                     mangaId: mangaId,
                     chapNum: parseFloat(book.metadata.number),
-                    langCode: languageCode,
                     name: `${book.metadata.title}`,
                     time: new Date(book.metadata.releaseDate),
+                    group: `${book.size}`,
+                    langCode: languageCode,
                     // @ts-ignore
                     sortingIndex: book.metadata.numberSort
                 }));
